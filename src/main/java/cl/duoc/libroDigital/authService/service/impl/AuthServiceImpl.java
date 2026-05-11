@@ -7,8 +7,8 @@ import cl.duoc.libroDigital.authService.model.User;
 import cl.duoc.libroDigital.authService.model.Role;
 import cl.duoc.libroDigital.authService.repository.UserRepository;
 import cl.duoc.libroDigital.authService.repository.RoleRepository;
-import cl.duoc.libroDigital.authService.security.JwtUtil;
 import cl.duoc.libroDigital.authService.service.AuthService;
+import cl.duoc.libroDigital.authService.util.JwtUtil;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

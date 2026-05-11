@@ -1,7 +1,8 @@
-package cl.duoc.libroDigital.authService.security;
+package cl.duoc.libroDigital.authService.util;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import cl.duoc.libroDigital.authService.model.User;
 
@@ -12,9 +13,11 @@ import java.util.stream.Collectors;
 @Component
 public class JwtUtil {
 
-    private final SecretKey SECRET_KEY = Keys.hmacShaKeyFor(
-            "mysupersecretkeymysupersecretkey1234".getBytes()
-    );
+    private final SecretKey SECRET_KEY;
+
+    public JwtUtil(@Value("${jwt.secret}") String secret) {
+        this.SECRET_KEY = Keys.hmacShaKeyFor(secret.getBytes());
+    }
 
     // ✅ ACCESS TOKEN
     public String generateToken(User user) {

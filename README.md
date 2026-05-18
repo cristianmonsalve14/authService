@@ -2,71 +2,135 @@
 
 Microservicio de autenticación y gestión de usuarios de la plataforma **Libro Digital**.
 
-Encargado del registro, autenticación, emisión y validación de tokens JWT, así como de la gestión de roles y permisos de usuarios. Es el núcleo de seguridad dentro de la arquitectura de microservicios.
+Encargado del registro, autenticación y generación de tokens JWT, así como del control de acceso a los microservicios del sistema.
 
 ---
 
 ## 🧠 Arquitectura
 
-Este microservicio está construido siguiendo una arquitectura por capas:
+Este microservicio sigue una arquitectura por capas:
 
-- **Controller** → Manejo de solicitudes HTTP
-- **Service** → Lógica de negocio
-- **Repository** → Acceso a base de datos
-- **DTO** → Transferencia de datos
-- **Security** → Configuración de seguridad y JWT
-- **Exception** → Manejo global de errores
-
----
-
-
-## ⚙️ Stack tecnológico
-
-- Java 21
-- Spring Boot
-- Spring Security
-- JWT (io.jsonwebtoken:jjwt)
-- BCrypt
-- Spring Web
-- Spring Data JPA
-- Maven
-- PostgreSQL
+- Controller → Manejo de endpoints HTTP  
+- Service → Lógica de negocio  
+- Repository → Acceso a base de datos  
+- DTO → Transferencia de datos  
+- Security → Configuración de JWT y seguridad  
+- Exception → Manejo de errores  
 
 ---
 
+## ⚙️ Stack Tecnológico
 
-## 🚀 Instalación y ejecución
-1. Clona este repositorio.
+- Java 21  
+- Spring Boot  
+- Spring Security  
+- JWT (io.jsonwebtoken)  
+- BCrypt (cifrado de contraseñas)  
+- Spring Web  
+- Spring Data JPA  
+- Maven  
+- PostgreSQL  
 
-```bash
-git clone https://github.com/cristianmonsalve14/authService.git
-cd authService
+---
+
+## 🚀 Instalación y Ejecución
+
+### 1. Configuración
+
+Editar archivo:
+
+src/main/resources/application.properties
+
+Ejemplo:
+
+spring.datasource.url=jdbc:postgresql://localhost:5432/librodigital_auth  
+spring.datasource.username=postgres  
+spring.datasource.password=tu_password  
+
+server.port=8081  
+
+jwt.secret=tuClaveSecretaParaJWT  
+
+---
+
+### 2. Ejecutar aplicación
+
+mvn clean spring-boot:run
+
+El servicio estará disponible en:
+
+http://localhost:8081  
+
+---
+
+## 🔑 Endpoints principales
+
+- POST /auth/register → Registro de usuario  
+- POST /auth/login → Autenticación y obtención de token JWT  
+
+---
+
+## 🔐 Seguridad
+
+El sistema utiliza autenticación basada en JWT:
+
+✔ Contraseñas encriptadas con BCrypt  
+✔ Generación de token en login  
+✔ Validación en cada request  
+
+Flujo:
+
+1. Usuario envía credenciales en /auth/login  
+2. Se valida usuario y contraseña  
+3. Se genera token JWT  
+4. El frontend guarda el token  
+5. El token se usa en cada petición:
+
+Authorization: Bearer {token}
+
+---
+
+## 🔗 Integración con otros servicios
+
+Este microservicio trabaja junto a:
+
+- academicService → consume el JWT para validar acceso  
+- frontend → envía token en cada petición  
+
+---
+
+## 🏗️ Estructura del Proyecto
+
+authService/
+├── controller/
+├── service/
+├── service/impl/
+├── repository/
+├── dto/
+├── security/
+├── exception/
+
+---
+
+## ✅ Estado del Proyecto
+
+✔ Autenticación funcional  
+✔ Generación de JWT  
+✔ Validación de credenciales  
+✔ Integración con frontend  
+✔ Integración con microservicios  
+
+---
+
+## 👨‍💻 Autor
+
+Cristian Monsalve  
+
+---
+
+## 📌 Observaciones
+
+Este microservicio es el encargado de la seguridad del sistema, permitiendo la autenticación centralizada mediante JWT.
+
+Se aplican buenas prácticas de seguridad como cifrado de contraseñas, validación de tokens y separación por capas.
 ``
-
-2. Configura la conexión a la base de datos en `src/main/resources/application.properties`.
-3. Compila y ejecuta con:
-   ```sh
-   mvn clean spring-boot:run
-   ```
-
-## Endpoints principales
-- `POST /auth/register` — Registro de usuario (username/email y password)
-- `POST /auth/login` — Autenticación y obtención de JWT
-
-## Seguridad
-- Contraseñas almacenadas con BCrypt.
-- Autenticación basada en JWT.
-- Roles y permisos gestionados en base de datos.
-
-## Pruebas unitarias
-- Pruebas para AuthServiceImpl: login, registro, errores de autenticación y usuario existente.
-- Pruebas para JwtUtil: generación y validación de tokens, manejo de tokens inválidos.
-- Ejecuta las pruebas con:
-   ```sh
-   mvn test
-   ```
-
-## Autor
-- Cristian Monsalve
----
-Este microservicio es parte del ecosistema Libro Digital. Más información y documentación general en el repositorio de infraestructura.

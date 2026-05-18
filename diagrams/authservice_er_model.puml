@@ -1,0 +1,56 @@
+@startuml
+title Diagrama Entidad-Relación - AuthService
+skinparam linetype ortho
+skinparam entity {
+  BackgroundColor #F9F9F9
+  BorderColor #2D4159
+  ArrowColor #2D4159
+  FontSize 14
+}
+
+entity "Usuario" as user {
+  + id : Long <<PK>>
+  --
+  username : String <<UNIQUE>>
+  password : String
+  email : String <<UNIQUE>>
+  enabled : boolean
+  createdAt : LocalDateTime
+  updatedAt : LocalDateTime
+}
+
+entity "Rol" as role {
+  + id : Long <<PK>>
+  --
+  nombre : String <<UNIQUE>>
+}
+
+enum "Roles disponibles" as Roles {
+  ADMINISTRADOR
+  DOCENTE
+  APODERADO
+  ESTUDIANTE
+}
+
+entity "Usuario_Rol" as user_roles {
+  + user_id : Long <<PK,FK>>
+  + role_id : Long <<PK,FK>>
+}
+
+user ||--o{ user_roles : "tiene"
+role ||--o{ user_roles : "asignado a"
+
+note top of user
+  Tabla de usuarios del sistema.
+  Almacena credenciales y datos principales.
+end note
+
+note top of role
+  Tabla de roles disponibles.
+  Define permisos y perfiles.
+end note
+
+note top of user_roles
+  Relación muchos a muchos entre usuarios y roles.
+end note
+@enduml

@@ -2,30 +2,12 @@ package cl.duoc.libroDigital.authService.dto;
 
 import java.util.Set;
 
-public class AuthResponse {
+public class UserProfileDTO {
 
-    private String accessToken;
-    private String refreshToken;
     private Long userId;
     private String username;
     private String email;
     private Set<String> roles;
-
-    public String getAccessToken() {
-        return accessToken;
-    }
-
-    public void setAccessToken(String accessToken) {
-        this.accessToken = accessToken;
-    }
-
-    public String getRefreshToken() {
-        return refreshToken;
-    }
-
-    public void setRefreshToken(String refreshToken) {
-        this.refreshToken = refreshToken;
-    }
 
     public Long getUserId() {
         return userId;

@@ -47,7 +47,7 @@ spring.datasource.url=jdbc:postgresql://localhost:5432/librodigital_auth
 spring.datasource.username=postgres  
 spring.datasource.password=tu_password  
 
-server.port=8081  
+server.port=8091  
 
 jwt.secret=tuClaveSecretaParaJWT  
 
@@ -59,7 +59,7 @@ mvn clean spring-boot:run
 
 El servicio estará disponible en:
 
-http://localhost:8081  
+http://localhost:8091  
 
 ---
 

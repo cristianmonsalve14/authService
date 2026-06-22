@@ -1,14 +1,14 @@
 package cl.duoc.libroDigital.authService.controller;
 
+import cl.duoc.libroDigital.authService.dto.CreateAdminUserRequest;
+import cl.duoc.libroDigital.authService.dto.UserResponse;
 import cl.duoc.libroDigital.authService.model.User;
 import cl.duoc.libroDigital.authService.model.Role;
-import cl.duoc.libroDigital.authService.dto.UserResponse;
 import cl.duoc.libroDigital.authService.repository.UserRepository;
 import cl.duoc.libroDigital.authService.repository.RoleRepository;
+import cl.duoc.libroDigital.authService.service.AdminUserService;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,14 +19,27 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/admin/users")
-@PreAuthorize("hasAuthority('ADMINISTRADOR')")
+@PreAuthorize("hasRole('ADMINISTRADOR')")
 public class AdminUserController {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final AdminUserService adminUserService;
 
-    @Autowired
-    private RoleRepository roleRepository;
+    public AdminUserController(
+            UserRepository userRepository,
+            RoleRepository roleRepository,
+            AdminUserService adminUserService) {
+        this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
+        this.adminUserService = adminUserService;
+    }
+
+    @PostMapping
+    public ResponseEntity<UserResponse> createUser(@RequestBody CreateAdminUserRequest request) {
+        User created = adminUserService.createUser(request);
+        return ResponseEntity.ok(convertToResponse(created));
+    }
 
     // ✅ Obtener todos los usuarios (AHORA CON DTO)
     @GetMapping
@@ -39,7 +52,7 @@ public class AdminUserController {
 
     // ✅ Obtener usuario por ID (CON DTO)
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponse> getUser(@PathVariable("id") @NonNull Long id) {
+    public ResponseEntity<UserResponse> getUser(@PathVariable("id") Long id) {
         return userRepository.findById(id)
                 .map(this::convertToResponse)
                 .map(ResponseEntity::ok)
@@ -48,7 +61,7 @@ public class AdminUserController {
 
     // ✅ Eliminar usuario
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable("id") @NonNull Long id) {
+    public ResponseEntity<Void> deleteUser(@PathVariable("id") Long id) {
         if (userRepository.existsById(id)) {
             userRepository.deleteById(id);
             return ResponseEntity.noContent().build();
@@ -59,7 +72,7 @@ public class AdminUserController {
     // ✅ Actualizar roles (DEVUELVE DTO)
     @PutMapping("/{id}/roles")
     public ResponseEntity<?> updateUserRoles(
-            @PathVariable("id") @NonNull Long id,
+            @PathVariable("id") Long id,
             @RequestBody List<String> roles) {
 
         Optional<User> userOpt = userRepository.findById(id);

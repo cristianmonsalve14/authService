@@ -3,7 +3,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -20,11 +19,13 @@ import java.util.stream.Collectors;
 @Component
 public class JwtFilter extends OncePerRequestFilter {
 
-    @Autowired
-    private JwtUtil jwtUtil;
+    private final JwtUtil jwtUtil;
+
+    public JwtFilter(JwtUtil jwtUtil) {
+        this.jwtUtil = jwtUtil;
+    }
 
     @Override
-    @SuppressWarnings("null")
     protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -33,8 +34,11 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
 
-        //Ignorar endpoints públicos
-        if (path.startsWith("/auth/")) {
+        boolean publicAuthEndpoint = path.equals("/auth/login")
+                || path.equals("/auth/register")
+                || path.equals("/auth/refresh");
+
+        if (publicAuthEndpoint) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -56,7 +60,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 List<SimpleGrantedAuthority> authorities = rolesStr != null
                         ? Arrays.stream(rolesStr.split(","))
                             .filter(r -> !r.isBlank())
-                            .map(SimpleGrantedAuthority::new)
+                            .map(role -> new SimpleGrantedAuthority("ROLE_" + role.trim()))
                             .collect(Collectors.toList())
                         : List.of();
 

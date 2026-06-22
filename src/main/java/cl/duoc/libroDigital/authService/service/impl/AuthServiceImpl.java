@@ -3,123 +3,96 @@ package cl.duoc.libroDigital.authService.service.impl;
 import cl.duoc.libroDigital.authService.dto.LoginRequest;
 import cl.duoc.libroDigital.authService.dto.RegisterRequest;
 import cl.duoc.libroDigital.authService.dto.AuthResponse;
+import cl.duoc.libroDigital.authService.dto.UserProfileDTO;
 import cl.duoc.libroDigital.authService.model.User;
-import cl.duoc.libroDigital.authService.model.Role;
 import cl.duoc.libroDigital.authService.repository.UserRepository;
-import cl.duoc.libroDigital.authService.repository.RoleRepository;
 import cl.duoc.libroDigital.authService.service.AuthService;
 import cl.duoc.libroDigital.authService.util.JwtUtil;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.Optional;
-import java.util.Collections;
-import java.time.LocalDateTime;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class AuthServiceImpl implements AuthService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final JwtUtil jwtUtil;
+    private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private JwtUtil jwtUtil;
+    public AuthServiceImpl(
+            UserRepository userRepository,
+            JwtUtil jwtUtil,
+            PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.jwtUtil = jwtUtil;
+        this.passwordEncoder = passwordEncoder;
+    }
 
-    @Autowired
-    private RoleRepository roleRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    // ✅ LOGIN CORRECTO
     @Override
     public AuthResponse login(LoginRequest request) {
-
-        Optional<User> userOpt = userRepository.findByUsername(request.getUsername());
-
-        if (userOpt.isEmpty()) {
-            throw new RuntimeException("Usuario o contraseña incorrectos");
-        }
-
-        User user = userOpt.get();
+        User user = userRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new RuntimeException("Usuario o contraseña incorrectos"));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new RuntimeException("Usuario o contraseña incorrectos");
         }
 
-        // ✅ GENERAR TOKENS
-        String accessToken = jwtUtil.generateToken(user);
-        String refreshToken = jwtUtil.generateRefreshToken(user);
-
-        AuthResponse response = new AuthResponse();
-        response.setAccessToken(accessToken);
-        response.setRefreshToken(refreshToken);
-
-        return response;
+        return buildAuthResponse(user);
     }
 
-    // ✅ REGISTER CORRECTO
     @Override
     public AuthResponse register(RegisterRequest request) {
+        throw new RuntimeException(
+                "Registro público deshabilitado. Solicite acceso al administrador del colegio.");
+    }
 
-        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
-            throw new RuntimeException("Usuario ya existe");
-        }
+    @Override
+    public AuthResponse refreshToken(String refreshToken) {
+        String username = jwtUtil.extractUsername(refreshToken);
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Token inválido"));
 
-        User user = new User();
-        user.setUsername(request.getUsername());
-        user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-
-        user.setEnabled(true);
-        user.setCreatedAt(LocalDateTime.now());
-        user.setUpdatedAt(LocalDateTime.now());
-
-        Role userRole = roleRepository.findByName("USER")
-                .orElseGet(() -> {
-                    Role r = new Role();
-                    r.setName("USER");
-                    return roleRepository.save(r);
-                });
-
-        user.setRoles(Collections.singleton(userRole));
-
-        userRepository.save(user);
-
-        // ✅ GENERAR TOKENS
-        String accessToken = jwtUtil.generateToken(user);
-        String refreshToken = jwtUtil.generateRefreshToken(user);
-
-        AuthResponse response = new AuthResponse();
-        response.setAccessToken(accessToken);
+        AuthResponse response = buildAuthResponse(user);
         response.setRefreshToken(refreshToken);
-
         return response;
     }
 
-    // ✅ REFRESH TOKEN IMPLEMENTADO
     @Override
-    public AuthResponse refreshToken(String refreshToken) {
+    public UserProfileDTO getProfile(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        return toProfile(user);
+    }
 
-        String username = jwtUtil.extractUsername(refreshToken);
-
-        Optional<User> userOpt = userRepository.findByUsername(username);
-
-        if (userOpt.isEmpty()) {
-            throw new RuntimeException("Token inválido");
-        }
-
-        User user = userOpt.get();
-
-        // ✅ GENERAR NUEVO ACCESS TOKEN
-        String newAccessToken = jwtUtil.generateToken(user);
-
+    private AuthResponse buildAuthResponse(User user) {
         AuthResponse response = new AuthResponse();
-        response.setAccessToken(newAccessToken);
-        response.setRefreshToken(refreshToken); // puedes renovar si quieres
-
+        response.setAccessToken(jwtUtil.generateToken(user));
+        response.setRefreshToken(jwtUtil.generateRefreshToken(user));
+        response.setUserId(user.getId());
+        response.setUsername(user.getUsername());
+        response.setEmail(user.getEmail());
+        response.setRoles(extractRoleNames(user));
         return response;
+    }
+
+    private UserProfileDTO toProfile(User user) {
+        UserProfileDTO profile = new UserProfileDTO();
+        profile.setUserId(user.getId());
+        profile.setUsername(user.getUsername());
+        profile.setEmail(user.getEmail());
+        profile.setRoles(extractRoleNames(user));
+        return profile;
+    }
+
+    private Set<String> extractRoleNames(User user) {
+        if (user.getRoles() == null) {
+            return Set.of();
+        }
+        return user.getRoles().stream()
+                .map(role -> role.getName())
+                .collect(Collectors.toSet());
     }
 }

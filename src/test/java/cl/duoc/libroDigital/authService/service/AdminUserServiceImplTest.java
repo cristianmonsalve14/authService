@@ -1,6 +1,8 @@
 package cl.duoc.libroDigital.authService.service;
 
 import cl.duoc.libroDigital.authService.dto.CreateAdminUserRequest;
+import cl.duoc.libroDigital.authService.exception.BadRequestException;
+import cl.duoc.libroDigital.authService.exception.ConflictException;
 import cl.duoc.libroDigital.authService.model.Role;
 import cl.duoc.libroDigital.authService.model.User;
 import cl.duoc.libroDigital.authService.repository.RoleRepository;
@@ -80,7 +82,7 @@ class AdminUserServiceImplTest {
     @Test
     void createUser_rejectsBlankUsername() {
         validRequest.setUsername("  ");
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+        BadRequestException ex = assertThrows(BadRequestException.class,
                 () -> adminUserService.createUser(validRequest));
         assertTrue(ex.getMessage().contains("usuario"));
     }
@@ -88,7 +90,7 @@ class AdminUserServiceImplTest {
     @Test
     void createUser_rejectsShortPassword() {
         validRequest.setPassword("abc");
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+        BadRequestException ex = assertThrows(BadRequestException.class,
                 () -> adminUserService.createUser(validRequest));
         assertTrue(ex.getMessage().contains("contraseña"));
     }
@@ -96,7 +98,7 @@ class AdminUserServiceImplTest {
     @Test
     void createUser_rejectsAdminRole() {
         validRequest.setRole("ADMINISTRADOR");
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+        BadRequestException ex = assertThrows(BadRequestException.class,
                 () -> adminUserService.createUser(validRequest));
         assertTrue(ex.getMessage().contains("ADMINISTRADOR"));
     }
@@ -104,7 +106,7 @@ class AdminUserServiceImplTest {
     @Test
     void createUser_rejectsDuplicateUsername() {
         when(userRepository.findByUsername("jperez")).thenReturn(Optional.of(new User()));
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+        ConflictException ex = assertThrows(ConflictException.class,
                 () -> adminUserService.createUser(validRequest));
         assertTrue(ex.getMessage().contains("usuario"));
     }
@@ -113,7 +115,7 @@ class AdminUserServiceImplTest {
     void createUser_rejectsDuplicateEmail() {
         when(userRepository.findByUsername("jperez")).thenReturn(Optional.empty());
         when(userRepository.findByEmailIgnoreCase("jperez@colegio.cl")).thenReturn(Optional.of(new User()));
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+        ConflictException ex = assertThrows(ConflictException.class,
                 () -> adminUserService.createUser(validRequest));
         assertTrue(ex.getMessage().contains("email"));
     }

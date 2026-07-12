@@ -4,6 +4,8 @@ import cl.duoc.libroDigital.authService.dto.AuthResponse;
 import cl.duoc.libroDigital.authService.dto.LoginRequest;
 import cl.duoc.libroDigital.authService.dto.RegisterRequest;
 import cl.duoc.libroDigital.authService.dto.UserProfileDTO;
+import cl.duoc.libroDigital.authService.exception.BadRequestException;
+import cl.duoc.libroDigital.authService.exception.UnauthorizedException;
 import cl.duoc.libroDigital.authService.model.Role;
 import cl.duoc.libroDigital.authService.model.User;
 import cl.duoc.libroDigital.authService.repository.UserRepository;
@@ -81,7 +83,7 @@ class AuthServiceImplTest {
         when(userRepository.findByUsername("prof_castillo")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("wrong", "encoded")).thenReturn(false);
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> authService.login(request));
+        UnauthorizedException ex = assertThrows(UnauthorizedException.class, () -> authService.login(request));
         assertTrue(ex.getMessage().contains("incorrectos"));
     }
 
@@ -93,12 +95,12 @@ class AuthServiceImplTest {
 
         when(userRepository.findByUsername("unknown")).thenReturn(Optional.empty());
 
-        assertThrows(RuntimeException.class, () -> authService.login(request));
+        assertThrows(UnauthorizedException.class, () -> authService.login(request));
     }
 
     @Test
     void register_disabled() {
-        assertThrows(RuntimeException.class, () -> authService.register(new RegisterRequest()));
+        assertThrows(BadRequestException.class, () -> authService.register(new RegisterRequest()));
     }
 
     @Test

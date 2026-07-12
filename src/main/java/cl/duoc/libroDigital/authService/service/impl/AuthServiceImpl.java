@@ -4,6 +4,9 @@ import cl.duoc.libroDigital.authService.dto.LoginRequest;
 import cl.duoc.libroDigital.authService.dto.RegisterRequest;
 import cl.duoc.libroDigital.authService.dto.AuthResponse;
 import cl.duoc.libroDigital.authService.dto.UserProfileDTO;
+import cl.duoc.libroDigital.authService.exception.BadRequestException;
+import cl.duoc.libroDigital.authService.exception.NotFoundException;
+import cl.duoc.libroDigital.authService.exception.UnauthorizedException;
 import cl.duoc.libroDigital.authService.model.User;
 import cl.duoc.libroDigital.authService.repository.UserRepository;
 import cl.duoc.libroDigital.authService.service.AuthService;
@@ -34,10 +37,10 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthResponse login(LoginRequest request) {
         User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new RuntimeException("Usuario o contraseña incorrectos"));
+                .orElseThrow(() -> new UnauthorizedException("Usuario o contraseña incorrectos"));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Usuario o contraseña incorrectos");
+            throw new UnauthorizedException("Usuario o contraseña incorrectos");
         }
 
         return buildAuthResponse(user);
@@ -45,7 +48,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse register(RegisterRequest request) {
-        throw new RuntimeException(
+        throw new BadRequestException(
                 "Registro público deshabilitado. Solicite acceso al administrador del colegio.");
     }
 
@@ -53,7 +56,7 @@ public class AuthServiceImpl implements AuthService {
     public AuthResponse refreshToken(String refreshToken) {
         String username = jwtUtil.extractUsername(refreshToken);
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Token inválido"));
+                .orElseThrow(() -> new UnauthorizedException("Token inválido"));
 
         AuthResponse response = buildAuthResponse(user);
         response.setRefreshToken(refreshToken);
@@ -63,7 +66,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public UserProfileDTO getProfile(String username) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
         return toProfile(user);
     }
 

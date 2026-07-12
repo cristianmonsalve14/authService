@@ -1,0 +1,3 @@
+# Copiar a application-local.properties (no versionar)
+spring.datasource.password=TU_PASSWORD_POSTGRES
+jwt.secret=cambiaEstaClaveJWTDeAlMenos32CaracteresParaHS512!!

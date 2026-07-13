@@ -12,13 +12,30 @@ class GlobalExceptionHandlerTest {
     private final GlobalExceptionHandler handler = new GlobalExceptionHandler();
 
     @Test
-    void handleRuntimeException_returnsBadRequest() {
+    void handleUnauthorized_returnsUnauthorized() {
         ResponseEntity<ErrorResponse> response =
-                handler.handleRuntimeException(new RuntimeException("Credenciales inválidas"));
+                handler.handleUnauthorized(new UnauthorizedException("Credenciales inválidas"));
+
+        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertEquals("Credenciales inválidas", response.getBody().getError());
+    }
+
+    @Test
+    void handleBadRequest_returnsBadRequest() {
+        ResponseEntity<ErrorResponse> response =
+                handler.handleBadRequest(new BadRequestException("dato inválido"));
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals("Credenciales inválidas", response.getBody().getError());
+        assertEquals("dato inválido", response.getBody().getError());
+    }
+
+    @Test
+    void handleNotFound_returnsNotFound() {
+        ResponseEntity<ErrorResponse> response =
+                handler.handleNotFound(new NotFoundException("no existe"));
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertEquals("no existe", response.getBody().getError());
     }
 
     @Test

@@ -32,10 +32,10 @@ build/
 ### VS Code ###
 .vscode/
 
-# Seguridad
+# Seguridad — secretos locales (no versionar)
 .env
-application.properties
-application.yml
+application-local.properties
+application-local.yml
 
 # Logs
 logs/

@@ -13,7 +13,13 @@ public class RoleInitializerConfig {
     @Bean
     public CommandLineRunner initRoles(RoleRepository roleRepository) {
         return args -> {
-            List<String> roles = List.of("ADMINISTRADOR", "DOCENTE", "APODERADO", "ESTUDIANTE");
+            List<String> roles = List.of(
+                    "SUPER_ADMINISTRADOR",
+                    "ADMINISTRADOR",
+                    "ADMINISTRATIVO",
+                    "DOCENTE",
+                    "APODERADO",
+                    "ESTUDIANTE");
             for (String roleName : roles) {
                 roleRepository.findByName(roleName)
                         .orElseGet(() -> {

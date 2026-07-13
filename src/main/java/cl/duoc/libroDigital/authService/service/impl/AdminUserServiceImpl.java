@@ -21,7 +21,8 @@ import java.util.stream.Collectors;
 @Service
 public class AdminUserServiceImpl implements AdminUserService {
 
-    private static final Set<String> ALLOWED_ROLES = Set.of("DOCENTE", "APODERADO", "ESTUDIANTE");
+    private static final Set<String> ALLOWED_ROLES = Set.of("DOCENTE", "APODERADO", "ESTUDIANTE", "ADMINISTRATIVO");
+    private static final Set<String> BLOCKED_ROLES = Set.of("ADMINISTRADOR", "SUPER_ADMINISTRADOR");
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
@@ -52,8 +53,8 @@ public class AdminUserServiceImpl implements AdminUserService {
         }
 
         String roleName = request.getRole().trim().toUpperCase(Locale.ROOT);
-        if ("ADMINISTRADOR".equals(roleName)) {
-            throw new BadRequestException("No se puede crear un usuario ADMINISTRADOR desde la aplicación");
+        if (BLOCKED_ROLES.contains(roleName)) {
+            throw new BadRequestException("No se puede crear un usuario " + roleName + " desde la aplicación");
         }
         if (!ALLOWED_ROLES.contains(roleName)) {
             throw new BadRequestException("Rol no permitido: " + roleName);
@@ -108,8 +109,8 @@ public class AdminUserServiceImpl implements AdminUserService {
         if (roles == null || roles.isEmpty()) {
             throw new BadRequestException("Debe indicar al menos un rol");
         }
-        if (roles.stream().anyMatch(r -> r != null && r.equalsIgnoreCase("ADMINISTRADOR"))) {
-            throw new BadRequestException("No se puede asignar el rol ADMINISTRADOR desde la aplicación.");
+        if (roles.stream().anyMatch(r -> r != null && BLOCKED_ROLES.contains(r.trim().toUpperCase(Locale.ROOT)))) {
+            throw new BadRequestException("No se puede asignar roles de super administración desde la aplicación.");
         }
 
         User user = getUserById(id);

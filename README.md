@@ -29,11 +29,10 @@ mvn spring-boot:run
 
 Password: `test1234`
 
-- `admin_colegio` — ADMINISTRADOR  
+- `admin_colegio` — SUPER_ADMINISTRADOR  
+- `admin_oficina` — ADMINISTRATIVO (estructura escolar; sin alta de docentes ni `/admin/users`)  
 - `prof_castillo` — DOCENTE  
 - `estudiante_demo` — ESTUDIANTE  
 - `apoderado_demo` — APODERADO  
 
-## Stack
-
-Java 21, Spring Boot 4.1, Security + JWT, JPA, PostgreSQL (`librodigital_auth`).
+`ADMINISTRADOR` se mantiene por compatibilidad y equivale a super admin.

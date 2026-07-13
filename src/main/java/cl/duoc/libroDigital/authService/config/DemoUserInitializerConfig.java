@@ -25,21 +25,27 @@ public class DemoUserInitializerConfig {
             RoleRepository roleRepository,
             PasswordEncoder passwordEncoder) {
         return args -> {
-            Role adminRole = roleRepository.findByName("ADMINISTRADOR")
+            Role superAdminRole = roleRepository.findByName("SUPER_ADMINISTRADOR")
+                    .orElseThrow(() -> new IllegalStateException("Rol SUPER_ADMINISTRADOR no encontrado"));
+            Role adminLegacyRole = roleRepository.findByName("ADMINISTRADOR")
                     .orElseThrow(() -> new IllegalStateException("Rol ADMINISTRADOR no encontrado"));
+            Role administrativeRole = roleRepository.findByName("ADMINISTRATIVO")
+                    .orElseThrow(() -> new IllegalStateException("Rol ADMINISTRATIVO no encontrado"));
             Role teacherRole = roleRepository.findByName("DOCENTE")
                     .orElseThrow(() -> new IllegalStateException("Rol DOCENTE no encontrado"));
-
-            ensureUser(userRepository, passwordEncoder, "admin_colegio",
-                    "admin@librodigital.cl", "test1234", Set.of(adminRole));
-
-            ensureUser(userRepository, passwordEncoder, "prof_castillo",
-                    "prof.castillo@duoc.cl", "test1234", Set.of(teacherRole));
-
             Role guardianRole = roleRepository.findByName("APODERADO")
                     .orElseThrow(() -> new IllegalStateException("Rol APODERADO no encontrado"));
             Role studentRole = roleRepository.findByName("ESTUDIANTE")
                     .orElseThrow(() -> new IllegalStateException("Rol ESTUDIANTE no encontrado"));
+
+            ensureUser(userRepository, passwordEncoder, "admin_colegio",
+                    "admin@librodigital.cl", "test1234", Set.of(superAdminRole));
+
+            ensureUser(userRepository, passwordEncoder, "admin_oficina",
+                    "oficina@librodigital.cl", "test1234", Set.of(administrativeRole));
+
+            ensureUser(userRepository, passwordEncoder, "prof_castillo",
+                    "prof.castillo@duoc.cl", "test1234", Set.of(teacherRole));
 
             ensureUser(userRepository, passwordEncoder, "apoderado_demo",
                     "apoderado@librodigital.cl", "test1234", Set.of(guardianRole));
@@ -47,10 +53,22 @@ public class DemoUserInitializerConfig {
             ensureUser(userRepository, passwordEncoder, "estudiante_demo",
                     "estudiante@librodigital.cl", "test1234", Set.of(studentRole));
 
+            // Migrar admin demo legado → super admin
+            userRepository.findByUsername("admin_colegio").ifPresent(user -> {
+                boolean hasSuper = user.getRoles() != null && user.getRoles().stream()
+                        .anyMatch(r -> "SUPER_ADMINISTRADOR".equals(r.getName()));
+                if (!hasSuper) {
+                    user.setRoles(Set.of(superAdminRole));
+                    user.setUpdatedAt(LocalDateTime.now());
+                    userRepository.save(user);
+                }
+            });
+
             userRepository.findByUsername("postman_test").ifPresent(user -> {
                 if (user.getRoles() == null || user.getRoles().stream()
-                        .noneMatch(r -> "ADMINISTRADOR".equals(r.getName()))) {
-                    user.setRoles(Set.of(adminRole));
+                        .noneMatch(r -> "SUPER_ADMINISTRADOR".equals(r.getName())
+                                || "ADMINISTRADOR".equals(r.getName()))) {
+                    user.setRoles(Set.of(adminLegacyRole));
                     user.setUpdatedAt(LocalDateTime.now());
                     userRepository.save(user);
                 }
